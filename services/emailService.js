@@ -32,6 +32,71 @@ transporter.verify((error, success) => {
 });
 
 
+export const sendLoginOTPEmail = async (email, otp) => {
+    try {
+
+        const mailOptions = {
+            from: `"InternArea" <${process.env.MAIL_USER}>`,
+            to: email,
+
+            subject: "InternArea - Login OTP Verification",
+
+            html: `
+                <div style="
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                    max-width: 600px;
+                    margin: auto;
+                ">
+
+                    <h2>InternArea Login Verification</h2>
+
+                    <p>Your OTP for login is:</p>
+
+                    <h1 style="
+                        letter-spacing: 8px;
+                        text-align: center;
+                        background: #f4f4f4;
+                        padding: 15px;
+                    ">
+                        ${otp}
+                    </h1>
+
+                    <p>
+                        This OTP is valid for 5 minutes.
+                    </p>
+
+                    <p>
+                        If you did not request this login,
+                        please ignore this email.
+                    </p>
+
+                </div>
+            `
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+        console.log("=================================");
+        console.log("✅ LOGIN OTP EMAIL SENT");
+        console.log("📧 To:", email);
+        console.log("🔢 OTP:", otp);
+        console.log("📨 Message ID:", info.messageId);
+        console.log("📬 Response:", info.response);
+        console.log("=================================");
+
+        return true;
+
+    } catch (error) {
+
+        console.error("❌ LOGIN OTP EMAIL ERROR:");
+        console.error(error);
+
+        return false;
+    }
+};
+
+
 // =====================================================
 // SEND RESUME OTP EMAIL
 // =====================================================

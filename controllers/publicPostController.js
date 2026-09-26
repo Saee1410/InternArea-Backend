@@ -2,6 +2,7 @@ import PublicPost from "../models/Publicpost.js";
 import Friend from "../models/Friend.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
+import { translateText } from "../services/translationService.js";
 
 // Get today's date range
 const getTodayRange = () => {
@@ -164,10 +165,28 @@ export const createPublicPost = async (req, res) => {
 // GET ALL PUBLIC POSTS
 export const getPublicPosts = async (req, res) => {
   try {
-    const posts = await PublicPost.find()
+    const targetLang = req.headers["accept-language"] || "en";
+
+    let posts = await PublicPost.find()
       .populate("user", "name profilePhoto")
       .populate("comments.user", "name profilePhoto")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // .lean() mule data modify karata yeto
+
+    // Caption ani Comments translate karne
+    for (let post of posts) {
+      if (post.caption && targetLang !== "en") {
+        post.caption = await translateText(post.caption, targetLang);
+      }
+
+      if (post.comments && post.comments.length > 0) {
+        for (let comment of post.comments) {
+          if (comment.text && targetLang !== "en") {
+            comment.text = await translateText(comment.text, targetLang);
+          }
+        }
+      }
+    }
 
     return res.status(200).json({
       count: posts.length,
@@ -181,6 +200,25 @@ export const getPublicPosts = async (req, res) => {
     });
   }
 };
+// export const getPublicPosts = async (req, res) => {
+//   try {
+//     const posts = await PublicPost.find()
+//       .populate("user", "name profilePhoto")
+//       .populate("comments.user", "name profilePhoto")
+//       .sort({ createdAt: -1 });
+
+//     return res.status(200).json({
+//       count: posts.length,
+//       posts,
+//     });
+//   } catch (error) {
+//     console.error("Get Public Posts Error:", error);
+
+//     return res.status(500).json({
+//       message: "Something went wrong while fetching public posts",
+//     });
+//   }
+// };
 
 
 // LIKE / UNLIKE PUBLIC POST
@@ -239,11 +277,16 @@ export const toggleLike = async (req, res) => {
 // ================================
 // ADD COMMENT TO PUBLIC POST
 // ================================
+
+// ================================
+// ADD COMMENT TO PUBLIC POST
+// ================================
 export const addComment = async (req, res) => {
   try {
     const userId = req.user.id;
     const { postId } = req.params;
     const { text } = req.body;
+    const targetLang = req.headers["accept-language"] || "en"; // Header madhun language ghene
 
     // Check comment text
     if (!text || !text.trim()) {
@@ -252,14 +295,12 @@ export const addComment = async (req, res) => {
       });
     }
 
-    // Check maximum length
     if (text.trim().length > 500) {
       return res.status(400).json({
         message: "Comment cannot exceed 500 characters",
       });
     }
 
-    // Find post
     const post = await PublicPost.findById(postId);
 
     if (!post) {
@@ -279,7 +320,23 @@ export const addComment = async (req, res) => {
     // Get updated post with user details
     const updatedPost = await PublicPost.findById(postId)
       .populate("user", "name profilePhoto")
-      .populate("comments.user", "name profilePhoto");
+      .populate("comments.user", "name profilePhoto")
+      .lean(); // .lean() waprayche mhanje object modify karta yeil
+
+    // Jar target language English nasel, tar caption ani comments translate karun pathavne
+    if (targetLang !== "en") {
+      if (updatedPost.caption) {
+        updatedPost.caption = await translateText(updatedPost.caption, targetLang);
+      }
+
+      if (updatedPost.comments && updatedPost.comments.length > 0) {
+        for (let comment of updatedPost.comments) {
+          if (comment.text) {
+            comment.text = await translateText(comment.text, targetLang);
+          }
+        }
+      }
+    }
 
     return res.status(201).json({
       message: "Comment added successfully",
@@ -293,6 +350,60 @@ export const addComment = async (req, res) => {
     });
   }
 };
+// export const addComment = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const { postId } = req.params;
+//     const { text } = req.body;
+
+//     // Check comment text
+//     if (!text || !text.trim()) {
+//       return res.status(400).json({
+//         message: "Comment cannot be empty",
+//       });
+//     }
+
+//     // Check maximum length
+//     if (text.trim().length > 500) {
+//       return res.status(400).json({
+//         message: "Comment cannot exceed 500 characters",
+//       });
+//     }
+
+//     // Find post
+//     const post = await PublicPost.findById(postId);
+
+//     if (!post) {
+//       return res.status(404).json({
+//         message: "Public post not found",
+//       });
+//     }
+
+//     // Add comment
+//     post.comments.push({
+//       user: userId,
+//       text: text.trim(),
+//     });
+
+//     await post.save();
+
+//     // Get updated post with user details
+//     const updatedPost = await PublicPost.findById(postId)
+//       .populate("user", "name profilePhoto")
+//       .populate("comments.user", "name profilePhoto");
+
+//     return res.status(201).json({
+//       message: "Comment added successfully",
+//       post: updatedPost,
+//     });
+//   } catch (error) {
+//     console.error("Add Comment Error:", error);
+
+//     return res.status(500).json({
+//       message: "Something went wrong while adding comment",
+//     });
+//   }
+// };
 
 
 // ================================
