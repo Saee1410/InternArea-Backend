@@ -11,10 +11,6 @@ const transporter = nodemailer.createTransport({
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
     },
-
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
 });
 
 
@@ -22,98 +18,18 @@ const transporter = nodemailer.createTransport({
 // VERIFY GMAIL CONNECTION
 // =====================================================
 
-transporter.verify()
-    .then(() => {
-        console.log("=================================");
+transporter.verify((error, success) => {
+
+    if (error) {
+        console.error(
+            "❌ Gmail SMTP connection failed:",
+            error.message
+        );
+    } else {
         console.log("✅ Gmail SMTP is ready");
-        console.log("📧 MAIL_USER:", process.env.MAIL_USER);
-        console.log("=================================");
-    })
-    .catch((error) => {
-        console.error("=================================");
-        console.error("❌ Gmail SMTP connection failed");
-        console.error("❌ Error code:", error.code);
-        console.error("❌ Error message:", error.message);
-        console.error("❌ Command:", error.command);
-        console.error("=================================");
-    });
-
-
-// =====================================================
-// SEND LOGIN OTP EMAIL
-// =====================================================
-
-export const sendLoginOTPEmail = async (email, otp) => {
-    try {
-
-        console.log("=================================");
-        console.log("📧 Sending LOGIN OTP");
-        console.log("📧 To:", email);
-        console.log("=================================");
-
-        const mailOptions = {
-            from: `"InternArea" <${process.env.MAIL_USER}>`,
-            to: email,
-            subject: "InternArea - Login OTP Verification",
-
-            html: `
-                <div style="
-                    font-family: Arial, sans-serif;
-                    padding: 20px;
-                    max-width: 600px;
-                    margin: auto;
-                ">
-
-                    <h2>InternArea Login Verification</h2>
-
-                    <p>Your OTP for login is:</p>
-
-                    <h1 style="
-                        letter-spacing: 8px;
-                        text-align: center;
-                        background: #f4f4f4;
-                        padding: 15px;
-                    ">
-                        ${otp}
-                    </h1>
-
-                    <p>
-                        This OTP is valid for 5 minutes.
-                    </p>
-
-                    <p>
-                        If you did not request this login,
-                        please ignore this email.
-                    </p>
-
-                </div>
-            `,
-        };
-
-        const info = await transporter.sendMail(mailOptions);
-
-        console.log("=================================");
-        console.log("✅ LOGIN OTP EMAIL SENT");
-        console.log("📧 To:", email);
-        console.log("📨 Message ID:", info.messageId);
-        console.log("📬 Response:", info.response);
-        console.log("=================================");
-
-        return true;
-
-    } catch (error) {
-
-        console.error("=================================");
-        console.error("❌ LOGIN OTP EMAIL FAILED");
-        console.error("❌ Error:", error);
-        console.error("❌ Code:", error.code);
-        console.error("❌ Command:", error.command);
-        console.error("❌ Response:", error.response);
-        console.error("=================================");
-
-        return false;
     }
-};
+
+});
 
 
 // =====================================================
@@ -121,13 +37,15 @@ export const sendLoginOTPEmail = async (email, otp) => {
 // =====================================================
 
 export const sendOTPEmail = async (email, otp) => {
+
     try {
 
-        console.log("📧 Sending Resume OTP to:", email);
-
         const mailOptions = {
+
             from: `"InternArea" <${process.env.MAIL_USER}>`,
+
             to: email,
+
             subject: "Resume Builder - Email Verification OTP",
 
             html: `
@@ -166,20 +84,23 @@ export const sendOTPEmail = async (email, otp) => {
             `,
         };
 
+
         const info = await transporter.sendMail(mailOptions);
 
-        console.log("✅ Resume OTP email sent");
+
+        console.log("✅ Resume OTP email sent successfully");
         console.log("📧 To:", email);
         console.log("📨 Message ID:", info.messageId);
+
 
         return true;
 
     } catch (error) {
 
-        console.error("❌ Resume OTP Email Error");
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
-        console.error("Response:", error.response);
+        console.error(
+            "❌ Resume OTP Email Error:",
+            error.message
+        );
 
         return false;
     }
@@ -190,13 +111,20 @@ export const sendOTPEmail = async (email, otp) => {
 // SEND FORGOT PASSWORD EMAIL
 // =====================================================
 
-export const sendForgotPasswordEmail = async (email, newPassword) => {
+export const sendForgotPasswordEmail = async (
+    email,
+    newPassword
+) => {
+
     try {
 
         const mailOptions = {
+
             from: `"InternArea" <${process.env.MAIL_USER}>`,
+
             to: email,
-            subject: "InternArea - Password Reset",
+
+            subject: "Internshala - Password Reset",
 
             html: `
                 <div style="
@@ -208,7 +136,9 @@ export const sendForgotPasswordEmail = async (email, newPassword) => {
 
                     <h2>Password Reset</h2>
 
-                    <p>Your new password is:</p>
+                    <p>
+                        Your new password is:
+                    </p>
 
                     <h2 style="
                         background: #f4f4f4;
@@ -232,37 +162,39 @@ export const sendForgotPasswordEmail = async (email, newPassword) => {
             `,
         };
 
+
         const info = await transporter.sendMail(mailOptions);
 
-        console.log("✅ Forgot Password email sent");
+
+        console.log(
+            "✅ Forgot Password email sent successfully"
+        );
+
         console.log("📧 To:", email);
         console.log("📨 Message ID:", info.messageId);
+
 
         return true;
 
     } catch (error) {
 
-        console.error("❌ Forgot Password Email Error");
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
-        console.error("Response:", error.response);
+        console.error(
+            "❌ Forgot Password Email Error:",
+            error.message
+        );
 
         return false;
     }
 };
 
-
-// =====================================================
-// SEND FRENCH LANGUAGE OTP
-// =====================================================
+/// SEND FRENC LANGUAGE OTP EMAIL
 
 export const sendFrenchLanguageOTP = async (email, otp) => {
     try {
-
         const mailOptions = {
-            from: `"InternArea" <${process.env.MAIL_USER}>`,
+            from : `"InternArea" <${process.env.MAIL_USER}>`,
             to: email,
-            subject: "InternArea - French Language OTP Verification",
+            subject: "InternArea - Freanch Language OTP Verification",
 
             html: `
                 <div style="
@@ -271,56 +203,53 @@ export const sendFrenchLanguageOTP = async (email, otp) => {
                     max-width: 600px;
                     margin: auto;
                 ">
+                <h2>Freanch Language Verification</h2>
+                <p>
+                  you requested to switch your InterArea language
+                  to French.
+                </p>
 
-                    <h2>French Language Verification</h2>
+                <p>
+                    Your verification OTP is:
+                </p>
 
-                    <p>
-                        You requested to switch your InternArea
-                        language to French.
-                    </p>
+                <h1 style="
+                    letter-spacing: 8px;
+                    text-align: center;
+                    background: #f4f4f4;
+                    padding: 15px;
+                ">
+                    ${otp}
+                </h1>
 
-                    <p>Your verification OTP is:</p>
-
-                    <h1 style="
-                        letter-spacing: 8px;
-                        text-align: center;
-                        background: #f4f4f4;
-                        padding: 15px;
-                    ">
-                        ${otp}
-                    </h1>
-
-                    <p>
-                        This OTP is valid for 5 minutes.
-                    </p>
-
-                    <p>
-                        If you did not request this verification,
-                        please ignore this email.
-                    </p>
-
+                <p>
+                 This OTP is valid for 5 minutes.
+                 </p> 
+                 <p>
+                  If you did not request this verification, please ignore this email. 
+                  </p>
                 </div>
-            `,
-        };
+                `,
 
+        };
         const info = await transporter.sendMail(mailOptions);
 
-        console.log("✅ French Language OTP email sent");
+        console.log("✅ French Language OTP email sent successfully");
         console.log("📧 To:", email);
         console.log("📨 Message ID:", info.messageId);
 
         return true;
 
     } catch (error) {
+            console.error(
+                "Freanch Language OTP Email Error:",
+                error.message
+            );
 
-        console.error("❌ French Language OTP Email Error");
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
-        console.error("Response:", error.response);
-
-        return false;
+            return false;
+        
     }
-};
+}
 
 
 // =====================================================
@@ -340,7 +269,9 @@ export const sendSubscriptionInvoiceEmail = async (
     try {
 
         const mailOptions = {
+
             from: `"InternArea" <${process.env.MAIL_USER}>`,
+
             to: email,
 
             subject: "InternArea - Subscription Payment Successful",
@@ -359,7 +290,9 @@ export const sendSubscriptionInvoiceEmail = async (
                         InternArea Subscription
                     </h2>
 
-                    <p>Hello,</p>
+                    <p>
+                        Hello,
+                    </p>
 
                     <p>
                         Your subscription payment was successful
@@ -411,13 +344,21 @@ export const sendSubscriptionInvoiceEmail = async (
                         Thank you for choosing InternArea.
                     </p>
 
+                    <p style="color: #666;">
+                        This email serves as your subscription
+                        payment confirmation.
+                    </p>
+
                 </div>
             `,
         };
 
         const info = await transporter.sendMail(mailOptions);
 
-        console.log("✅ Subscription Invoice email sent");
+        console.log(
+            "✅ Subscription Invoice email sent successfully"
+        );
+
         console.log("📧 To:", email);
         console.log("📨 Message ID:", info.messageId);
 
@@ -425,10 +366,10 @@ export const sendSubscriptionInvoiceEmail = async (
 
     } catch (error) {
 
-        console.error("❌ Subscription Invoice Email Error");
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
-        console.error("Response:", error.response);
+        console.error(
+            "❌ Subscription Invoice Email Error:",
+            error.message
+        );
 
         return false;
     }
