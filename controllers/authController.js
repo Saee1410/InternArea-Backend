@@ -796,9 +796,15 @@ export const googleLogin = async (req, res) => {
             );
 
             if (!emailSent) {
-                return res.status(500).json({
+                await LoginOtp.deleteMany({
+                    userId: user._id,
+                    email: user.email,
+                    verified: false,
+                });
+
+                return res.status(503).json({
                     message:
-                        "Failed to send login OTP",
+                        "Login OTP could not be sent. Check the backend email configuration.",
                 });
             }
 
